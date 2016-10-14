@@ -1,3 +1,5 @@
+// Generate functions which represents the order strategy, simply change the
+// OSFactory to modifiy the strategy function
 package orderStrategy
 
 import (
