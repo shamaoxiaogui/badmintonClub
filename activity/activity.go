@@ -3,6 +3,7 @@
 package activity
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -33,6 +34,8 @@ func (a *Activity) Parser(input string) error {
 	if _, err := fmt.Sscanf(input, "%s %2d:00~%2d:00 %d",
 		&a.date, &a.begin, &a.end, &a.num); err != nil {
 		return err
+	} else if a.begin < 0 || a.end < 0 || a.num < 0 {
+		return errors.New("invailed input: with minus???")
 	}
 	return nil
 }
@@ -45,4 +48,31 @@ func (a Activity) String() string {
 		str = str + "+"
 	}
 	return str + fmt.Sprintf("%d", a.profit)
+}
+
+// Calculate the number of yards need to rent
+func (a Activity) YardNumber() int {
+	t, x := a.num/6, a.num%6
+	var ret int
+	switch t {
+	case 0:
+		if x < 4 {
+			ret = 0
+		} else {
+			ret = 1
+		}
+	case 1:
+		ret = 2
+	case 2:
+		fallthrough
+	case 3:
+		if x >= 4 {
+			ret = t + 1
+		} else {
+			ret = t
+		}
+	default:
+		ret = t
+	}
+	return ret
 }
