@@ -16,6 +16,9 @@ my ThoughtWork homework(repository [https://github.com/shamaoxiaogui/badmintonCl
 
     ```
     cd $GOPATH/src/github.com/shamaoxiaogui/badmintonClub
+    # this step might show you some runtime error, ignore those 
+    # because there are illegal input test in the unit test, focus on the last line in stdout,
+    # and check if there is a "PASS"
     go test
     # test the sub lib
     cd activity
@@ -29,6 +32,7 @@ my ThoughtWork homework(repository [https://github.com/shamaoxiaogui/badmintonCl
     ```
     cd $GOPATH/src/github.com/shamaoxiaogui/badmintonClub/example
     go build
+    # the demoDatas file have all example input mentioned in the pdf
     ./example < demoDatas
     ```
 
