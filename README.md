@@ -33,11 +33,12 @@ my ThoughtWork homework(repository [https://github.com/shamaoxiaogui/badmintonCl
     ```
 
 ### from local file
+
 move the whole project to your ```$GOPATH/src/``` ,so the workspace looks like:
 
-    ```
-    $GOPATH/src/github.com/shamaoxiaogui/badmintonClub/example
-    ```
+```shell
+$GOPATH/src/github.com/shamaoxiaogui/badmintonClub/example
+```
 
 then you can run test or example just like section **from github** said
 
