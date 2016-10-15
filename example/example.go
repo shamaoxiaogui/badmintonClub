@@ -16,10 +16,6 @@ func main() {
 	}
 	input := string(temp)
 	// fmt.Print(input)
-	output, err := GenerateSummary(input)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	output := GenerateSummary(input)
 	fmt.Print(output)
 }

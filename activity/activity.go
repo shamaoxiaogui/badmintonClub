@@ -3,19 +3,17 @@
 package activity
 
 import (
-	"errors"
 	"fmt"
 	"time"
 )
 
-// The callback function calculate the number of yards need to rent
-// When it return 0, the process(for one Activity) can be terminated
-type YardNumberFunc func(int) int
+// Strategy interface
+type CalcStrategy interface {
+	Strategy(date string, begin, end, num int) (int, int)
+}
 
-// Time period with different cost
-type PriceLUT [2][]int
-
-type Activity struct {
+// force client to use NewActivity to create activity struct
+type activity struct {
 	date    string
 	begin   int // time to start
 	end     int
@@ -23,27 +21,26 @@ type Activity struct {
 	income  int
 	payment int
 	profit  int
-	// yf is order strategy, calculate the number of yard need to order
-	yf YardNumberFunc
-	// timeLUT is an 2-D array containing time points which constructs time period with different cost
-	timeLUT PriceLUT
-	// moneyLUT is an 2-D array containing corresponding price
-	moneyLUT PriceLUT
-	// Both the 2-D arrays' first slice represent weekdays' price, and the second one represent weekends's
+
+	calc CalcStrategy
 }
 
-func NewActivity(yf YardNumberFunc, tLUT PriceLUT, mLUT PriceLUT) *Activity {
-	ret := &Activity{}
-	ret.yf = yf
-	ret.timeLUT = tLUT
-	ret.moneyLUT = mLUT
+// Factory function to generate activity struct
+// User must use this function insteady of activity{} (and you can't do that...)
+// the calc Startegy need be transfered
+func NewActivity(calc CalcStrategy) *activity {
+	if calc == nil {
+		panic("NewActivity:no Strategy injected")
+	}
+	ret := &activity{}
+	ret.calc = calc
 	return ret
 }
 
 // Parser string to activity, return err if input is in wrong format
 // Input Format expected is "yyyy-MM-dd HH:mm~HH:mm [num]"
-// This method is public so that we can use it to "re-fill" a Activity
-func (a *Activity) Parser(input string) error {
+// This method is public so that we can use it to "re-fill" a activity
+func (a *activity) Parser(input string) {
 	// defer func() {
 	//     if err := recover(); err != nil {
 	//         fmt.Println(err)
@@ -57,28 +54,25 @@ func (a *Activity) Parser(input string) error {
 	// a.num, _ = strconv.Atoi(input[index+13:])
 	if _, err := fmt.Sscanf(input, "%s %2d:00~%2d:00 %d",
 		&a.date, &a.begin, &a.end, &a.num); err != nil {
-		*a = Activity{}
-		return err
+		panic(err)
 	} else if a.begin < 9 || a.begin > 22 || a.end < 9 ||
 		a.end > 22 || a.begin > a.end || a.num < 0 {
-		*a = Activity{}
-		return errors.New("invailed input: with minus???")
+		panic("activity.Parser: invailed input: with minus???")
 	} else {
 		const shortForm = "2006-01-02" //...fuck golang...
 		if _, err := time.Parse(shortForm, a.date); err != nil {
-			*a = Activity{}
-			return err
+			*a = activity{}
+			panic(err)
 		}
 		// re-initialize
 		a.income = 0
 		a.payment = 0
 		a.profit = 0
 	}
-
-	return nil
 }
 
-func (a Activity) String() string {
+//Format Output
+func (a activity) String() string {
 	str := fmt.Sprintf("%s %02d:00~%02d:00 +%d -%d ", a.date,
 		a.begin, a.end, a.income, a.payment)
 
@@ -89,50 +83,19 @@ func (a Activity) String() string {
 }
 
 // Calculate the income, payment, and profit.
-// O(n) where n is the number of time period with different cost
-func (a *Activity) CalcProfit() {
-	numYard := a.yf(a.num)
-
-	if numYard != 0 {
-		// Calc Income
-		a.income = a.num * 30
-
-		//Calc Payment
-		const shortForm = "2006-01-02"
-		t, _ := time.Parse(shortForm, a.date)
-		index := 0 //default Mon.-Fri.
-		if wd := t.Weekday(); wd == time.Sunday || wd == time.Saturday {
-			index = 1
-		}
-		i := 0
-		for ; i < len(a.timeLUT[index])-1; i++ {
-			if a.begin >= a.timeLUT[index][i] && a.begin < a.timeLUT[index][i+1] {
-				//find the lower boundary
-				break
-			}
-		}
-		i++
-		j := a.begin
-		// sum the payment
-		for ; a.timeLUT[index][i] < a.end; i++ {
-			a.payment += numYard * a.moneyLUT[index][i-1] * (a.timeLUT[index][i] - j)
-			j = a.timeLUT[index][i]
-		}
-		// there are maybe a tail left
-		a.payment += numYard * a.moneyLUT[index][i-1] * (a.end - j)
-
-		//Calc profit
-		a.profit = a.income - a.payment
-	} // else the activity is terminated, income=0, payment=0, profit=0
+// Use Strategy interface do the calculation.
+func (a *activity) CalcProfit() {
+	a.income, a.payment = a.calc.Strategy(a.date, a.begin, a.end, a.num)
+	a.profit = a.income - a.payment
 }
 
 // Getter
-func (a Activity) Income() int {
+func (a activity) Income() int {
 	return a.income
 }
-func (a Activity) Payment() int {
+func (a activity) Payment() int {
 	return a.payment
 }
-func (a Activity) Profit() int {
+func (a activity) Profit() int {
 	return a.profit
 }
