@@ -37,26 +37,22 @@ const shortForm = "2006-01-02"
 //order strategy, calculate the number of yard need to order
 func (d demoStrategy) yardNumber(num int) int {
 	t, x := num/6, num%6
-	var ret int
-	switch t {
-	case 0:
-		if x < 4 {
-			ret = 0
-		} else {
-			ret = 1
+	ret := t
+	if x != 0 {
+		switch t {
+		case 0:
+			if x >= 4 {
+				ret = 1
+			}
+		case 1:
+			ret = 2
+		case 2:
+			fallthrough
+		case 3:
+			if x >= 4 {
+				ret += 1
+			}
 		}
-	case 1:
-		ret = 2
-	case 2:
-		fallthrough
-	case 3:
-		if x >= 4 {
-			ret = t + 1
-		} else {
-			ret = t
-		}
-	default:
-		ret = t
 	}
 	return ret
 }
