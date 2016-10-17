@@ -11,8 +11,8 @@ import (
 type demoStrategy struct {
 }
 
-func NewStrategy() demoStrategy {
-	ret := demoStrategy{}
+func NewStrategy() *demoStrategy {
+	ret := &demoStrategy{}
 	return ret
 }
 
