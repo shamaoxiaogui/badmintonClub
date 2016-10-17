@@ -5,15 +5,13 @@ package strategy
 
 import (
 	"time"
-
-	act "github.com/shamaoxiaogui/badmintonClub/activity"
 )
 
 // use NewStrategy function to generte xxxStrategy struct
 type demoStrategy struct {
 }
 
-func NewStrategy() act.CalcStrategy {
+func NewStrategy() demoStrategy {
 	ret := demoStrategy{}
 	return ret
 }
